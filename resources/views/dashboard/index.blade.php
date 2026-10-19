@@ -18,7 +18,7 @@
         </p>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
         <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -35,47 +35,67 @@
             </a>
         </div>
 
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Commandes
-            </p>
+        
+<!-- Commandes -->
+<div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        Commandes enregistrées
+    </p>
 
-            <p class="mt-3 text-lg font-semibold text-gray-400 dark:text-gray-500">
-                À intégrer
-            </p>
+    <p class="mt-3 text-3xl font-bold text-gray-900 dark:text-white">
+        {{ number_format($totalCommandes, 0, ',', ' ') }}
+    </p>
 
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Statistiques réelles à connecter.
-            </p>
-        </div>
+    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Toutes les commandes
+    </p>
+</div>
 
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Ventes
-            </p>
+<!-- Ventes -->
+<div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        Montant des ventes
+    </p>
 
-            <p class="mt-3 text-lg font-semibold text-gray-400 dark:text-gray-500">
-                À intégrer
-            </p>
+    <p class="mt-3 text-2xl font-bold text-gray-900 dark:text-white">
+        {{ number_format($totalVentes, 0, ',', ' ') }} FCFA
+    </p>
 
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Montants calculés depuis les commandes.
-            </p>
-        </div>
+    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Hors commandes annulées
+    </p>
+</div>
 
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Paiements reçus
-            </p>
+<!-- Paiements -->
+<div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        Paiements reçus
+    </p>
 
-            <p class="mt-3 text-lg font-semibold text-gray-400 dark:text-gray-500">
-                À intégrer
-            </p>
+    <p class="mt-3 text-2xl font-bold text-gray-900 dark:text-white">
+        {{ number_format($totalPaiements, 0, ',', ' ') }} FCFA
+    </p>
 
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Montants calculés depuis les paiements.
-            </p>
-        </div>
+    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Paiements validés
+    </p>
+</div>
+
+<!-- Solde restant -->
+<div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        Reste à encaisser
+    </p>
+
+    <p class="mt-3 text-2xl font-bold text-orange-600 dark:text-orange-400">
+        {{ number_format($resteAPayer, 0, ',', ' ') }} FCFA
+    </p>
+
+    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Solde global estimé
+    </p>
+</div>
+
 
     </div>
 
