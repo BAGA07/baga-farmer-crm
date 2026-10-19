@@ -1,0 +1,65 @@
+
+@extends('layouts.app')
+
+@section('title', 'Mes clients - Baga Farmer')
+
+@section('content')
+<div class="card">
+    <div class="actions" style="justify-content: space-between;">
+        <div>
+            <h1>Mes clients</h1>
+            <p class="muted">Gère les contacts de Baga Farmer.</p>
+        </div>
+        <a class="btn" href="{{ route('clients.create') }}">+ Nouveau client</a>
+    </div>
+
+    <form method="GET" action="{{ route('clients.index') }}">
+        <label>
+            Rechercher un client
+            <input type="search" name="recherche"
+                   value="{{ $recherche }}"
+                   placeholder="Nom, téléphone ou code client">
+        </label>
+        <div class="actions">
+            <button class="btn" type="submit">Rechercher</button>
+            <a class="btn btn-secondary" href="{{ route('clients.index') }}">Réinitialiser</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <p><strong>{{ $clients->total() }}</strong> client(s) trouvé(s)</p>
+
+    @forelse ($clients as $client)
+        <div style="padding: 14px 0; border-bottom: 1px solid #e5e7eb;">
+            <strong>{{ $client->nom }}</strong>
+            <p class="muted" style="margin: 6px 0;">
+                {{ $client->code_client }} · {{ $client->telephone }}
+            </p>
+            <p style="margin: 6px 0;">
+                {{ $client->type_client }}
+                @if ($client->quartier)
+                    · {{ $client->quartier }}
+                @endif
+            </p>
+            <div class="actions">
+                <a class="btn" href="{{ route('clients.show', $client) }}">Voir la fiche</a>
+                <a class="btn btn-secondary" href="{{ route('clients.edit', $client) }}">Modifier</a>
+
+                <form method="POST" action="{{ route('clients.destroy', $client) }}"
+                      onsubmit="return confirm('Archiver ce client ?')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-danger" type="submit">Archiver</button>
+                </form>
+            </div>
+        </div>
+    @empty
+        <p>Aucun client trouvé. Ajoute ton premier client pour commencer.</p>
+    @endforelse
+
+    <div style="margin-top: 20px;">
+        {{ $clients->links() }}
+    </div>
+</div>
+@endsection
