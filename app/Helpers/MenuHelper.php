@@ -31,6 +31,11 @@ public static function getOthersItems()
             'path' => '/produits',
         ],
         [
+            'icon' => 'forms',
+            'name' => 'Catégories',
+            'path' => '/categories',
+        ],
+        [
             'icon' => 'task',
             'name' => 'Commandes',
             'path' => '/commandes',

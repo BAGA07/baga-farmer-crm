@@ -1312,3 +1312,48 @@ pre code,
   text-align: left !important;
   unicode-bidi: isolate;
 }
+
+
+/* =========================================
+   LISTES DÉROULANTES — MODE CLAIR ET SOMBRE
+   ========================================= */
+
+/* Champ select fermé */
+select {
+    color-scheme: light;
+    background-color: #ffffff;
+    color: #1f2937;
+    border-color: #d1d5db;
+}
+
+/* Options dans la liste ouverte */
+select option {
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+/* Mode sombre */
+html.dark select {
+    color-scheme: dark;
+    background-color: #111827;
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+/* Options en mode sombre */
+html.dark select option {
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+
+/* Option désactivée ou placeholder */
+select option:disabled {
+    color: #9ca3af;
+}
+
+/* Focus et accessibilité */
+select:focus {
+    outline: none;
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgb(22 163 74 / 20%);
+}
