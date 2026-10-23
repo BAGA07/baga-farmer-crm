@@ -5,19 +5,34 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Commande;
 use App\Models\Paiement;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request): View
     {
-        // Clients actifs
-        $totalClients = Client::where('actif', true)->count();
+        $tenant = $request->attributes->get('tenant');
 
-        // Nombre total de commandes
-        $totalCommandes = Commande::count();
+        abort_unless($tenant, 403, 'Aucune ferme sélectionnée.');
 
-        // Calcul du montant des ventes à partir des lignes de commande
-        $commandes = Commande::with('lignes')
+        $tenantId = (int) $tenant->id;
+
+        // Nombre de clients actifs de cette ferme.
+        $totalClients = Client::query()
+            ->where('tenant_id', $tenantId)
+            ->where('actif', true)
+            ->count();
+
+        // Nombre de commandes de cette ferme.
+        $totalCommandes = Commande::query()
+            ->where('tenant_id', $tenantId)
+            ->count();
+
+        // Ventes calculées uniquement à partir des commandes
+        // et des lignes appartenant à cette ferme.
+        $commandes = Commande::query()
+            ->where('tenant_id', $tenantId)
             ->where(function ($query) {
                 $query->whereNull('statut')
                     ->orWhereNotIn('statut', [
@@ -29,6 +44,10 @@ class DashboardController extends Controller
                         'canceled',
                     ]);
             })
+            ->with([
+                'lignes' => fn ($query) => $query
+                    ->where('tenant_id', $tenantId),
+            ])
             ->get();
 
         $totalVentes = $commandes->sum(function ($commande) {
@@ -51,22 +70,27 @@ class DashboardController extends Controller
             );
         });
 
-        // Paiements considérés comme validés
-        $totalPaiements = Paiement::whereIn('statut', [
-            'valide',
-            'validé',
-            'confirme',
-            'confirmé',
-            'effectue',
-            'effectué',
-            'paye',
-            'payé',
-            'termine',
-            'terminé',
-        ])->sum('montant');
+        // Paiements commerciaux validés de cette ferme uniquement.
+        $totalPaiements = Paiement::query()
+            ->where('tenant_id', $tenantId)
+            ->whereIn('statut', [
+                'valide',
+                'validé',
+                'confirme',
+                'confirmé',
+                'effectue',
+                'effectué',
+                'paye',
+                'payé',
+                'termine',
+                'terminé',
+            ])
+            ->sum('montant');
 
-        // Solde global restant à encaisser
-        $resteAPayer = max(0, $totalVentes - (float) $totalPaiements);
+        $resteAPayer = max(
+            0,
+            $totalVentes - (float) $totalPaiements
+        );
 
         return view('dashboard.index', compact(
             'totalClients',

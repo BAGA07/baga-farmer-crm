@@ -1,4 +1,3 @@
-
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -20,18 +19,18 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/connexion', [
         AuthenticatedSessionController::class,
-        'create'
+        'create',
     ])->name('login');
 
     Route::post('/connexion', [
         AuthenticatedSessionController::class,
-        'store'
+        'store',
     ])->name('login.store');
 });
 
 Route::post('/deconnexion', [
     AuthenticatedSessionController::class,
-    'destroy'
+    'destroy',
 ])->middleware('auth')->name('logout');
 
 /*
@@ -40,8 +39,7 @@ Route::post('/deconnexion', [
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
-
+Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])
         ->name('dashboard');
 
@@ -57,20 +55,22 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/commandes/{commande}/paiements', [
         PaiementController::class,
-        'store'
+        'store',
     ])->name('commandes.paiements.store');
 
     Route::get('/paiements', [
         PaiementController::class,
-        'index'
+        'index',
     ])->name('paiements.index');
 
     Route::get('/profil', [ProfileController::class, 'edit'])
-    ->name('profile.edit');
+        ->name('profile.edit');
 
-Route::put('/profil', [ProfileController::class, 'update'])
-    ->name('profile.update');
+    Route::put('/profil', [ProfileController::class, 'update'])
+        ->name('profile.update');
 
-Route::put('/profil/mot-de-passe', [ProfileController::class, 'updatePassword'])
-    ->name('profile.password');
+    Route::put('/profil/mot-de-passe', [
+        ProfileController::class,
+        'updatePassword',
+    ])->name('profile.password');
 });

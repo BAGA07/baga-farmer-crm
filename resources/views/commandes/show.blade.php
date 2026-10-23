@@ -3,6 +3,22 @@
 
 @section('content')
 
+@if (session('success'))
+    <div class="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800">
+        <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 13l4 4L19 7" />
+        </svg>
+        {{ session('success') }}
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
+        {{ session('error') }}
+    </div>
+@endif
+
 @php
     $sousTotal = $commande->lignes->sum(function ($ligne) {
         return ((float) $ligne->quantite * (float) $ligne->prix_unitaire)

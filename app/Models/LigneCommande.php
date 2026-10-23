@@ -10,6 +10,7 @@ class LigneCommande extends Model
     protected $table = 'lignes_commande';
 
     protected $fillable = [
+        'tenant_id',
         'commande_id',
         'produit_id',
         'nom_produit',
@@ -28,19 +29,18 @@ class LigneCommande extends Model
         ];
     }
 
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
     public function commande(): BelongsTo
     {
-        return $this->belongsTo(
-            Commande::class,
-            'commande_id'
-        );
+        return $this->belongsTo(Commande::class, 'commande_id');
     }
 
     public function produit(): BelongsTo
     {
-        return $this->belongsTo(
-            Produit::class,
-            'produit_id'
-        );
+        return $this->belongsTo(Produit::class, 'produit_id');
     }
 }

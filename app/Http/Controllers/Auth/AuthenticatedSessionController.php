@@ -6,21 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Afficher la page de connexion.
-     */
     public function create(): View
     {
         return view('auth.login');
     }
 
-    /**
-     * Vérifier les identifiants et connecter l'utilisateur.
-     */
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
@@ -32,26 +27,59 @@ class AuthenticatedSessionController extends Controller
             'password.required' => 'Veuillez saisir votre mot de passe.',
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors([
-                    'email' => 'Adresse e-mail ou mot de passe incorrect.',
-                ])
-                ->onlyInput('email');
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'email' => 'Adresse e-mail ou mot de passe incorrect.',
+            ]);
         }
 
         $request->session()->regenerate();
 
+        $user = $request->user();
+
+        $tenants = $user->tenants()
+            ->where('tenants.status', 'active')
+            ->get();
+
+        if ($tenants->isEmpty()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()
+                ->route('login')
+                ->withErrors([
+                    'email' => 'Aucune ferme active n’est associée à votre compte.',
+                ]);
+        }
+
+        if ($tenants->count() === 1) {
+            $request->session()->put('tenant_slug', $tenants->first()->slug);
+        } else {
+            // La sélection d'une ferme devra être implémentée
+            // avant d'autoriser ces utilisateurs à accéder au CRM.
+            $request->session()->forget('tenant_slug');
+
+            Auth::logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()
+                ->route('login')
+                ->withErrors([
+                    'email' => 'Votre compte est associé à plusieurs fermes. La sélection de ferme doit être configurée.',
+                ]);
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 
-    /**
-     * Déconnecter l'utilisateur.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::logout();
 
+        $request->session()->forget('tenant_slug');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

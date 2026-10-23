@@ -11,6 +11,7 @@ class Commande extends Model
     protected $table = 'commandes';
 
     protected $fillable = [
+        'tenant_id',
         'numero',
         'client_id',
         'user_id',
@@ -33,6 +34,11 @@ class Commande extends Model
         ];
     }
 
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'client_id');
@@ -45,17 +51,11 @@ class Commande extends Model
 
     public function lignes(): HasMany
     {
-        return $this->hasMany(
-            LigneCommande::class,
-            'commande_id'
-        );
+        return $this->hasMany(LigneCommande::class, 'commande_id');
     }
 
     public function paiements(): HasMany
     {
-        return $this->hasMany(
-            Paiement::class,
-            'commande_id'
-        );
+        return $this->hasMany(Paiement::class, 'commande_id');
     }
 }

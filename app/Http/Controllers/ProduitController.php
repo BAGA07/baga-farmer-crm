@@ -6,52 +6,95 @@ use App\Models\Categorie;
 use App\Models\Produit;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProduitController extends Controller
 {
+    private function tenantId(Request $request): int
+    {
+        $tenant = $request->attributes->get('tenant');
+
+        abort_unless($tenant, 403, 'Aucune ferme sélectionnée.');
+
+        return (int) $tenant->id;
+    }
+
+    private function verifierProduit(Produit $produit, int $tenantId): void
+    {
+        abort_unless(
+            (int) $produit->tenant_id === $tenantId,
+            404,
+            'Produit introuvable.'
+        );
+    }
+
     public function index(Request $request)
     {
-        $query = Produit::with('categorie');
+        $tenantId = $this->tenantId($request);
+
+        $query = Produit::query()
+            ->where('tenant_id', $tenantId)
+            ->with([
+                'categorie' => fn ($q) => $q
+                    ->where('tenant_id', $tenantId),
+            ]);
 
         if ($request->filled('recherche')) {
-            $recherche = $request->recherche;
+            $recherche = $request->string('recherche')->trim()->toString();
 
             $query->where(function ($q) use ($recherche) {
                 $q->where('nom', 'like', "%{$recherche}%")
-                  ->orWhere('reference', 'like', "%{$recherche}%");
+                    ->orWhere('reference', 'like', "%{$recherche}%");
             });
         }
 
         if ($request->filled('categorie_id')) {
-            $query->where('categorie_id', $request->categorie_id);
+            $query->where('categorie_id', $request->input('categorie_id'));
         }
 
         if ($request->filled('statut')) {
-            $query->where('actif', $request->statut === 'actif');
+            $query->where('actif', $request->input('statut') === 'actif');
         }
 
         $produits = $query->latest()->paginate(10)->withQueryString();
 
-        $categories = Categorie::orderBy('nom')->get();
+        $categories = Categorie::query()
+            ->where('tenant_id', $tenantId)
+            ->orderBy('nom')
+            ->get();
 
-        return view('produits.index', compact(
-            'produits',
-            'categories'
-        ));
+        return view('produits.index', compact('produits', 'categories'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $categories = Categorie::orderBy('nom')->get();
+        $tenantId = $this->tenantId($request);
+
+        $categories = Categorie::query()
+            ->where('tenant_id', $tenantId)
+            ->orderBy('nom')
+            ->get();
 
         return view('produits.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
+        $tenantId = $this->tenantId($request);
+
         $validated = $request->validate([
-            'categorie_id' => ['nullable', 'exists:categories,id'],
-            'reference' => ['required', 'string', 'max:30', 'unique:produits,reference'],
+            'categorie_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')
+                    ->where(fn ($q) => $q->where('tenant_id', $tenantId)),
+            ],
+            // La colonne reference est actuellement unique dans la base.
+            'reference' => [
+                'required',
+                'string',
+                'max:30',
+                'unique:produits,reference',
+            ],
             'nom' => ['required', 'string', 'max:150'],
             'unite' => ['required', 'string', 'max:30'],
             'prix_gros' => ['required', 'numeric', 'min:0'],
@@ -60,6 +103,7 @@ class ProduitController extends Controller
             'quantite_disponible' => ['nullable', 'numeric', 'min:0'],
         ]);
 
+        $validated['tenant_id'] = $tenantId;
         $validated['stock_suivi'] = $request->boolean('stock_suivi');
         $validated['actif'] = true;
 
@@ -74,20 +118,30 @@ class ProduitController extends Controller
             ->with('success', 'Produit ajouté avec succès.');
     }
 
-    public function edit(Produit $produit)
+    public function edit(Request $request, Produit $produit)
     {
-        $categories = Categorie::orderBy('nom')->get();
+        $tenantId = $this->tenantId($request);
+        $this->verifierProduit($produit, $tenantId);
 
-        return view('produits.edit', compact(
-            'produit',
-            'categories'
-        ));
+        $categories = Categorie::query()
+            ->where('tenant_id', $tenantId)
+            ->orderBy('nom')
+            ->get();
+
+        return view('produits.edit', compact('produit', 'categories'));
     }
 
     public function update(Request $request, Produit $produit)
     {
+        $tenantId = $this->tenantId($request);
+        $this->verifierProduit($produit, $tenantId);
+
         $validated = $request->validate([
-            'categorie_id' => ['nullable', 'exists:categories,id'],
+            'categorie_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')
+                    ->where(fn ($q) => $q->where('tenant_id', $tenantId)),
+            ],
             'reference' => [
                 'required',
                 'string',
@@ -109,6 +163,9 @@ class ProduitController extends Controller
             $validated['quantite_disponible'] = null;
         }
 
+        // Ne jamais autoriser le changement de ferme via le formulaire.
+        unset($validated['tenant_id']);
+
         $produit->update($validated);
 
         return redirect()
@@ -116,10 +173,12 @@ class ProduitController extends Controller
             ->with('success', 'Produit modifié avec succès.');
     }
 
-    public function destroy(Produit $produit)
+    public function destroy(Request $request, Produit $produit)
     {
-        // Désactivation plutôt que suppression définitive :
-        // les anciennes lignes de commande restent préservées.
+        $tenantId = $this->tenantId($request);
+        $this->verifierProduit($produit, $tenantId);
+
+        // Désactivation : les anciennes lignes de commande sont conservées.
         $produit->update(['actif' => false]);
 
         return redirect()

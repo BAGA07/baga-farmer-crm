@@ -124,12 +124,35 @@
                                 </span>
                             </td>
 
-                            <td class="whitespace-nowrap px-5 py-4 text-center">
-                                <a href="{{ route('commandes.show', ['commande' => $commande->id]) }}"
-                                   class="font-medium text-green-700 hover:text-green-900">
-                                    Voir le détail
-                                </a>
-                            </td>
+                            
+<td class="whitespace-nowrap px-5 py-4">
+    <div class="flex flex-wrap items-center justify-center gap-3">
+
+        <a href="{{ route('commandes.show', ['commande' => $commande->id]) }}"
+           class="font-medium text-green-700 hover:text-green-900">
+            Voir le détail
+        </a>
+
+        <a href="{{ route('commandes.edit', $commande) }}"
+           class="font-medium text-blue-600 hover:text-blue-800">
+            Modifier
+        </a>
+
+        <form action="{{ route('commandes.destroy', $commande) }}"
+              method="POST"
+              onsubmit="return confirm('Voulez-vous vraiment supprimer cette commande ? Cette action est irréversible.');">
+            @csrf
+            @method('DELETE')
+
+            <button type="submit"
+                    class="font-medium text-red-600 hover:text-red-800">
+                Supprimer
+            </button>
+        </form>
+
+    </div>
+</td>
+
 
                         </tr>
                     @empty
